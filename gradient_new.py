@@ -46,7 +46,7 @@ inc_fluct_rate = 0.5 # 1.2
 
 dec_fluct_rate = 0.5 # 0.14
 
-classifier = "Y"
+classifier = "Idx"
 
 # This function adds a new column for each ORIGINAL column that existed in the dataset
 # with raised to a power of "order"
@@ -222,9 +222,9 @@ def train_data(w, gradient, x, y, alpha, num_examples):
             
 
 # Transform pandas df to numpy array
-#df = pd.read_csv("Data1.csv")
+df = pd.read_csv("Data1.csv")
 #df = pd.read_csv("Test_Data.csv")
-df = pd.read_csv("Test_Data_2.csv")
+#df = pd.read_csv("Test_Data_2.csv")
 
 N = len(df)
 
@@ -267,8 +267,11 @@ training_y.reset_index(drop=True, inplace=True)
 testing_y.reset_index(drop=True, inplace=True)
 
 #inc_order(w, training_x, testing_x, orig_col_names, 1)
-w = inc_order(w, training_x, testing_x, orig_col_names, 2)
-#inc_order(w, training_x, testing_x, orig_col_names, 3)
+#w = inc_order(w, training_x, testing_x, orig_col_names, 2)
+#w = inc_order(w, training_x, testing_x, orig_col_names, 3)
+#w =  inc_order(w, training_x, testing_x, orig_col_names, 4)
+w = inc_order(w, training_x, testing_x, orig_col_names, 5)
+
 
 #for i in range(2, 10):
 
