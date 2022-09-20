@@ -1,39 +1,24 @@
 import pandas as pd
+import numpy as np
 
 # Can use numpy for matrix multiplication
-
-# First value when ran (likely an error) (4 indexes, 1 iteration)
-# [-7698.137553979965, 90291.33301864793, -96060.81900108558, -1142634951.9588823]
-
-# Second value when ran (4 indexes, 1 iteration)
-# [-24.021220166334658, -6943.090548156954, 25445126.826429952, 7393.083055041451]
-
-# Third value when ran (5 indexes, 1 iteration)
-# [-24.02164967971531, -6943.198960068693, 25514854.78276097, 7393.694247770547, 87921339.90770519]
-
-
-# Fourth value when ran (5 indexes, 1 iteration)
-# [0.7998115791036531, -60.58472767016169, 1782.692193356475, 1.5175421064569572, 6156.754601682345]
-
-# Fifth value when ran (5 indexes, 2 iteration)
-# [15.53820184006398, 4461.260065419933, -129032.87018370129, -36.482797711187075, -445819.18046466226]
-
-# Test data
-# [1.1000134637058878, 2.0508316094219734]
 
 def Residual_Sum(w, x, y, num_examples, getMean = False):
     sum = 0
 
     if not getMean:
         for i in range(num_examples):
-            sum += (y.iat[i, 0] - get_predict_val(w, x.iloc[[i]]))**2
+            predict_val = w[0]
+            predict_val += np.dot(w[1:], x[i])
+            sum += (y[i, 0] - predict_val)**2
         return sum
 
     else:
         mean = 0
         for i in range(num_examples):
-            predict_y = get_predict_val(w, x.iloc[[i]])
-            sum += (y.iat[i, 0] - predict_y)**2
+            predict_y = w[0]
+            predict_y += np.dot(w[1:], x[i])
+            sum += (y[i, 0] - predict_y)**2
             mean += predict_y
         mean /= num_examples
 
@@ -47,15 +32,15 @@ def R_Sq(w, x, y, num_examples):
     RSS, Mean = Residual_Sum(w, x, y, num_examples, True)
     sum = 0
     for i in range(num_examples):
-       sum += (y.iat[i, 0] - Mean) ** 2
+       sum += (y[i, 0] - Mean) ** 2
     
     return 1 - (RSS/sum)
     
 
 # Can be adjusted as needed
-alpha = 0.8 #0.008
+alpha = 0.008 #0.008
 
-classifier = "Idx"
+classifier = "Y"
 
 # This function adds a new column for each ORIGINAL column that existed in the dataset
 # with raised to a power of "order"
@@ -102,7 +87,9 @@ def inc_order(w, training_x, testing_x, orig_col_names, order):
 
         #testing_x.insert(0, name, testing_col_data, True)
 
-        w.append(1)
+        w = np.append(w, [1])
+
+        return w
 
 # Dot Product
 #
@@ -125,7 +112,7 @@ def get_predict_val(w, x):
 
     for i in range(len(x.columns)):
 
-        predict_val += (w[i + 1] * x.iat[0, i])
+        predict_val += (w[i + 1] * x[0, i])
 
         #print("Multiplying " + str(w[i + 1]) + " and " + str(x.iat[0, i]))
 
@@ -141,7 +128,8 @@ def train_data(w, x, y, alpha, num_examples):
 
     N = len(w)
 
-    v = []
+    #v = []
+    v = np.array([])
     
     for j in range(N):
 
@@ -157,17 +145,15 @@ def train_data(w, x, y, alpha, num_examples):
 
             else:
 
-                x_val = x.iat[i, j - 1]
-
-            #print("x multiple is: " + str(x_val))
-
-            #a = str(get_predict_val(w, x.iloc[[i]]))
-            #b = str(y.iat[i, 0])
-            #c = str(x_val)
+                x_val = x[i, j - 1]
 
             #print("Adding (" + a + " - " + b + ") * " + c + " to the sum...")
 
-            sum += (get_predict_val(w, x.iloc[[i]]) - y.iat[i, 0]) * x_val
+            predict_val = w[0]
+
+            predict_val += np.dot(w[1:], x[i])
+
+            sum += (predict_val - y[i, 0]) * x_val
 
             #print(sum)
 
@@ -175,7 +161,10 @@ def train_data(w, x, y, alpha, num_examples):
 
         sum *= (alpha / num_examples)
 
-        v.append(w[j] - sum)
+
+        #print("v before: " + str(v))
+        v = np.append(v, [w[j] - sum])
+        #print("v after: " + str(v))
 
         #w[j] -= sum
 
@@ -187,7 +176,7 @@ def train_data(w, x, y, alpha, num_examples):
 # Transform pandas df to numpy array
 #df = pd.read_csv("Data1.csv")
 #df = pd.read_csv("Test_Data.csv")
-df = pd.read_csv("Data1.csv")
+df = pd.read_csv("Test_Data_2.csv")
 
 N = len(df)
 
@@ -195,7 +184,9 @@ N = len(df)
 orig_col_names = list(df.columns[:-1])
 
 # initial values for w
-w = [0.01] * (len(orig_col_names) + 1)
+#w = [0.01] * (len(orig_col_names) + 1)
+
+w = np.array([1] * (len(orig_col_names) + 1))
 
 # Take first sample (training)
 #df_new = df.sample(frac = 0.75, replace=True)
@@ -223,7 +214,7 @@ training_y.reset_index(drop=True, inplace=True)
 testing_y.reset_index(drop=True, inplace=True)
 
 #inc_order(w, training_x, testing_x, orig_col_names, 1)
-#inc_order(w, training_x, testing_x, orig_col_names, 2)
+w = inc_order(w, training_x, testing_x, orig_col_names, 2)
 #inc_order(w, training_x, testing_x, orig_col_names, 3)
 
 #for i in range(2, 10):
@@ -236,12 +227,18 @@ print(training_y)
 
 print("w: " + str(w))
 
-for i in range(1000):
+for i in range(1500):
 
-    w = train_data(w, training_x, training_y, alpha, len(training_x))
+    # Convert training_x and training_y to numpy
+    training_x_numpy = training_x.to_numpy()    
+    training_y_numpy = training_y.to_numpy()
 
-    print(w)
+    #print(training_x_numpy[1])
 
-    print("RMSE: " + str(RMSE(w, training_x, training_y, len(training_x))))
+    w = train_data(w, training_x_numpy, training_y_numpy, alpha, len(training_x_numpy))
 
-    print("R^2: " + str(R_Sq(w, training_x, training_y, len(training_x))))
+    print("w: " + str(w))
+
+    print("RMSE: " + str(RMSE(w, training_x_numpy, training_y_numpy, len(training_x_numpy))))
+
+    print("R^2: " + str(R_Sq(w, training_x_numpy, training_y_numpy, len(training_x_numpy))))
