@@ -11,16 +11,16 @@ def Residual_Sum(w, x, y, num_examples, getMean = False):
     if not getMean:
         
         for i in range(num_examples):
-            predict_val = w[0]
-            predict_val += np.dot(w[1:], x[i])
+            #predict_val = w[0]
+            predict_val = np.dot(w, x[i])
             sum += (y[i, 0] - predict_val)**2
         return sum
 
     else:
         mean = 0
         for i in range(num_examples):
-            predict_y = w[0]
-            predict_y += np.dot(w[1:], x[i])
+            #predict_y = w[0]
+            predict_y = np.dot(w, x[i])
             sum += (y[i, 0] - predict_y)**2
             mean += predict_y
         mean /= num_examples
@@ -40,7 +40,7 @@ def R_Sq(w, x, y, num_examples):
     return 1 - (RSS/sum)
 
 # Can be adjusted as needed
-alpha = 0.005 # 0.00000246505314 # 0.007 #0.008
+alpha = 0.00001 # 0.00000246505314 # 0.007 #0.008
 
 inc_fluct_rate = 0.5 # 1.2
 
@@ -145,25 +145,27 @@ def train_data(w, gradient, x, y, alpha, num_examples):
     
     for j in range(N):
 
-        print("Training w at index " + str(j) + "...")
+        #print("Training w at index " + str(j) + "...")
 
         sum = 0
 
         for i in range(num_examples):
 
-            if j == 0:
+            #if j == 0:
 
-                x_val = 1
+            #    x_val = 1
 
-            else:
+            #else:
 
-                x_val = x[i, j - 1]
+            #    x_val = x[i, j - 1]
+
+            x_val = x[i, j]
 
             #print("Adding (" + a + " - " + b + ") * " + c + " to the sum...")
 
-            predict_val = w[0]
+            #predict_val = w[0]
 
-            predict_val += np.dot(w[1:], x[i])
+            predict_val = np.dot(w, x[i])
 
             # Gradient
             sum += (predict_val - y[i, 0]) * x_val
@@ -228,17 +230,23 @@ df = pd.read_csv("Data1.csv")
 
 N = len(df)
 
+# Insert a column for the constant
+df.insert(0, "Constant", [1] * N)
+
 # Original features
-orig_col_names = list(df.columns[:-1])
+orig_col_names = list(df.columns[1:-1])
 
 # initial values for w
 #w = [0.01] * (len(orig_col_names) + 1)
 
-w = np.array([1] * (len(orig_col_names) + 1))
+#w = np.array([1] * (len(orig_col_names) + 1))
+#w = np.array([0.999823,   -0.13085741,  0.01604778,  0.99986325,  0.21832722])
 
 #w = np.array([611.18305705,12485.69095535,-453.59327085,-1.74367274,-9023.79250752])
 
 #w = np.array([67.956433, 0.03722, -0.004231477, -5.58388, -0.0591527])
+
+w = np.array([67.95509739, 0.0372, -0.004227, -5.8883, -0.059133])
 
 
 # Take first sample (training)
@@ -270,7 +278,7 @@ testing_y.reset_index(drop=True, inplace=True)
 #w = inc_order(w, training_x, testing_x, orig_col_names, 2)
 #w = inc_order(w, training_x, testing_x, orig_col_names, 3)
 #w =  inc_order(w, training_x, testing_x, orig_col_names, 4)
-w = inc_order(w, training_x, testing_x, orig_col_names, 5)
+#w = inc_order(w, training_x, testing_x, orig_col_names, 5)
 
 
 #for i in range(2, 10):
@@ -287,13 +295,19 @@ print("Alpha: " + str(alpha))
 
 gradient = [None] * len(w)
 
+# Convert training_x and training_y to numpy
+training_x_numpy = training_x.to_numpy()    
+training_y_numpy = training_y.to_numpy()
+
 for i in range(1000):
 
     # Convert training_x and training_y to numpy
-    training_x_numpy = training_x.to_numpy()    
-    training_y_numpy = training_y.to_numpy()
+    #training_x_numpy = training_x.to_numpy()    
+    #training_y_numpy = training_y.to_numpy()
 
     w, alpha = train_data(w, gradient, training_x_numpy, training_y_numpy, alpha, len(training_x_numpy))
+
+    print("\n\n")
 
     print("w: " + str(w))
 
@@ -301,7 +315,7 @@ for i in range(1000):
 
     print("R^2: " + str(R_Sq(w, training_x_numpy, training_y_numpy, len(training_x_numpy))))
 
-    print("Alpha: " + str(alpha))
+    #print("Alpha: " + str(alpha))
 
     print("Gradient: " + str(gradient))
 
