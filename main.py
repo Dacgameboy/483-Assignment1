@@ -4,6 +4,8 @@ from lasso_ridge_elastic import *
 
 myProblems = [Question.K_Fold, Question.FeatureScale, Question.Gradient, Question.NormReg]
 
+# myProblems = [Question.Gradient]
+
 for Problem in myProblems:
 
     match Problem:
@@ -17,6 +19,7 @@ for Problem in myProblems:
 
             gd = Gradient("Data1.csv", 0.000007, "Idx", 1, 5)
             gd.train()
+
 
         case Question.FeatureScale:
 

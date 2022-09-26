@@ -1,3 +1,4 @@
+import time as t
 import pandas as pd
 import numpy as np
 from question import Question
@@ -181,6 +182,7 @@ class LassoRidgeElastic:
 
         match Problem:
             case Question.K_Fold:
+
                 for i in range(1, self.goal_order):
 
                     if self.order < i:
@@ -262,7 +264,9 @@ class LassoRidgeElastic:
                     print("\nRidge:")
                     rr = Ridge(alpha=0.3)
                     #rr = make_pipeline(('scl', StandardScaler(with_mean=False)), Ridge())
+                    StartTime = t.time()
                     rr.fit(self.X_train, self.y_train)
+                    EndTime = t.time()
                     pred_train_rr = rr.predict(self.X_train)
                     print("Intercept: " + str(rr.intercept_))
                     print("Coefficients: " + str(rr.coef_))
@@ -272,11 +276,14 @@ class LassoRidgeElastic:
                     pred_test_rr = rr.predict(self.X_test)
                     print("Testing RMSE: " + str(np.sqrt(mean_squared_error(self.y_test, pred_test_rr))))
                     print("Testing Coefficient of Determination: " + str(r2_score(self.y_test, pred_test_rr)))
+                    print("Total Time: " + str(EndTime - StartTime))
 
 
                     print("\nLasso: ")
                     model_lasso = Lasso(alpha=0.3)
+                    StartTime = t.time()
                     model_lasso.fit(self.X_train, self.y_train)
+                    EndTime = t.time()
                     pred_train_lasso = model_lasso.predict(self.X_train)
                     print("Intercept: " + str(model_lasso.intercept_))
                     print("Coefficients: " + str(model_lasso.coef_))
@@ -286,11 +293,14 @@ class LassoRidgeElastic:
                     pred_test_lasso = model_lasso.predict(self.X_test)
                     print("Testing RMSE: " + str(np.sqrt(mean_squared_error(self.y_test, pred_test_lasso))))
                     print("Testing Coefficient of Determination: " + str(r2_score(self.y_test, pred_test_lasso)))
+                    print("Total Time: " + str(EndTime - StartTime))
 
                     # Elastic Net
                     print("\nElastic Net: ")
                     model_enet = ElasticNet(alpha=0.3)
+                    StartTime = t.time()
                     model_enet.fit(self.X_train, self.y_train)
+                    EndTime = t.time()
                     pred_train_enet = model_enet.predict(self.X_train)
                     print("Intercept: " + str(model_enet.intercept_))
                     print("Coefficients: " + str(model_enet.coef_))
@@ -300,6 +310,7 @@ class LassoRidgeElastic:
                     pred_test_enet = model_enet.predict(self.X_test)
                     print("Testing RMSE: " + str(np.sqrt(mean_squared_error(self.y_test, pred_test_enet))))
                     print("Testing Coefficient of Determination: " + str(r2_score(self.y_test, pred_test_enet)))
+                    print("Total Time: " + str(EndTime - StartTime))
 
                     print("\n\n")
 

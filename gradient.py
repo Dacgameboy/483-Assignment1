@@ -1,3 +1,4 @@
+import time as t
 import pandas as pd
 import numpy as np
 
@@ -170,7 +171,7 @@ class Gradient:
                 # Gradient
                 sum += (self.predict_val - y[i][0]) * x_val
                 
-            print("Gradient for index " + str(j) + ": " + str(sum))
+            #print("Gradient for index " + str(j) + ": " + str(sum))
 
             #if gradient[j] != None:
 
@@ -273,10 +274,10 @@ class Gradient:
         self.training_y_numpy = self.training_y_numpy.to_numpy()    
         self.testing_y_numpy = self.testing_y_numpy.to_numpy()
 
-        print("Mean 1: " + str(self.training_x_numpy[:, 1].mean()))
-        print("Mean 2: " + str(self.training_x_numpy[:, 2].mean()))
-        print("Mean 3: " + str(self.training_x_numpy[:, 3].mean()))
-        print("Mean 4: " + str(self.training_x_numpy[:, 4].mean()))
+        #print("Mean 1: " + str(self.training_x_numpy[:, 1].mean()))
+        #print("Mean 2: " + str(self.training_x_numpy[:, 2].mean()))
+        #print("Mean 3: " + str(self.training_x_numpy[:, 3].mean()))
+        #print("Mean 4: " + str(self.training_x_numpy[:, 4].mean()))
 
         #print(self.training_x_numpy)
         #print(self.training_y_numpy)
@@ -347,6 +348,8 @@ class Gradient:
 
         #gradient = [None] * len(w)
 
+        StartTime = t.time()
+        
         for i in range(self.iterations):
 
             # Convert training_x and training_y to numpy
@@ -366,6 +369,10 @@ class Gradient:
             #print("Alpha: " + str(alpha))
 
             #print("Gradient: " + str(self.gradient))
+            
+        EndTime = t.time()
+
+        print("Total Time: " + str(EndTime - StartTime) + " seconds")
 
 
 

@@ -1,3 +1,4 @@
+import time as t
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import datasets, linear_model
@@ -212,9 +213,10 @@ class LinRegr:
 
                     # Create the linear regression
                     self.regr = linear_model.LinearRegression()
-
+                    StartTime = t.time()
                     self.regr.fit(self.training_x_fs, self.training_y)
-
+                    EndTime = t.time()
+                    print("Total Time: " + str(EndTime - StartTime))
                     self.predict_y = self.regr.predict(self.testing_x_fs)
                     print("Intercept: \n", self.regr.intercept_)
                     print("\nCoefficients: \n", self.regr.coef_)
@@ -234,6 +236,8 @@ class LinRegr:
 
                     print("Coefficient of determination: \n", r2_score(self.training_y, self.predict_y_2))
 
+                    print("Total Time: " + str(EndTime - StartTime))
+
                     print()
 
             case Question.LinReg:
@@ -246,9 +250,9 @@ class LinRegr:
 
                     # Create the linear regression
                     self.regr = linear_model.LinearRegression()
-
+                    StartTime = t.time()
                     self.regr.fit(self.training_x, self.training_y)
-
+                    EndTime = t.time()
                     self.predict_y = self.regr.predict(self.testing_x)
                     print("Intercept: \n", self.regr.intercept_)
                     print("\nCoefficients: \n", self.regr.coef_)
@@ -267,6 +271,8 @@ class LinRegr:
                     print("Root Mean Squared Error: \n", mse(self.training_y, self.predict_y_2, squared=False))
 
                     print("Coefficient of determination: \n", r2_score(self.training_y, self.predict_y_2))
+
+                    print("Total Time: " + str(EndTime - StartTime))
 
                     print()
 """
