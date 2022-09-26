@@ -261,6 +261,8 @@ class LassoRidgeElastic:
                     
                         self.inc_order(Problem)
 
+                    print("Order: " + str(i))
+
                     print("\nRidge:")
                     rr = Ridge(alpha=0.3)
                     #rr = make_pipeline(('scl', StandardScaler(with_mean=False)), Ridge())
@@ -278,6 +280,7 @@ class LassoRidgeElastic:
                     print("Testing Coefficient of Determination: " + str(r2_score(self.y_test, pred_test_rr)))
                     print("Total Time: " + str(EndTime - StartTime))
 
+                    print("Order: " + str(i))
 
                     print("\nLasso: ")
                     model_lasso = Lasso(alpha=0.3)
@@ -294,6 +297,8 @@ class LassoRidgeElastic:
                     print("Testing RMSE: " + str(np.sqrt(mean_squared_error(self.y_test, pred_test_lasso))))
                     print("Testing Coefficient of Determination: " + str(r2_score(self.y_test, pred_test_lasso)))
                     print("Total Time: " + str(EndTime - StartTime))
+
+                    print("Order: " + str(i))
 
                     # Elastic Net
                     print("\nElastic Net: ")
