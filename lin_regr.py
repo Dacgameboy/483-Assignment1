@@ -1,160 +1,308 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from enum import Enum
 from sklearn import datasets, linear_model
 from sklearn.metrics import mean_squared_error as mse, r2_score
+from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 
-# This function adds a new column for each ORIGINAL column that existed in the dataset
-# with raised to a power of "order"
-#
-# df - Data frame
-# data_len - Number of examples (N)
-# orig_col_names - A list of the original feature names
-# order - The order to increase to
-def inc_order(training_x, testing_x, orig_col_names, order):
+class Question(Enum):
+    FeatureScale = "fs"
+    Regular = "df"
+    Gradient = "gd"
 
-    train_len = len(training_x)
-    test_len = len(testing_x)
+class LinRegr:
 
-    for col_name in orig_col_names:
+    def __init__(self, filename, goal_order):
 
-        # The data for the new column
-        training_col_data = []
-        testing_col_data = []
+        self.goal_order = goal_order + 1
 
-        for example in range(train_len):
+        # Initialize df and N (the length of df)
+        self.read_file(filename)
 
-            #new_col_data.append(df[col_name][example] ** order)
-            training_col_data.append(training_x[col_name][example] ** order)
+        # Separate the df into training and testing sets
+        self.sample_sets()
 
-        for example in range(test_len):
-        
-            testing_col_data.append(testing_x[col_name][example] ** order)
+        # Original features
+        self.orig_col_names = list(self.df.columns[:-1])
 
-        # Create the name for the column
-        name = col_name + " Order: " + str(order)
+        # Current order of the regression function
+        self.order = 1
 
-        # Insert the column
-        #df.insert(0, name, new_col_data)
+        self.order_fs = 1
 
-        training_x.insert(0, name, training_col_data)
+        self.do_feature_scale()
 
-        testing_x.insert(0, name, testing_col_data)
+    # This function adds a new column for each ORIGINAL column that existed in the dataset
+    # with raised to a power of "order"
+    #
+    # df - Data frame
+    # data_len - Number of examples (N)
+    # orig_col_names - A list of the original feature names
+    # order - The order to increase to
+    def inc_order(self, problem):
 
-    #return df
+        match problem:
 
+            case Question.FeatureScale:
 
+                train_len = len(self.training_x_fs)
+                test_len = len(self.testing_x_fs)
 
+                self.order_fs += 1
 
+                for i in range(len(self.orig_col_names)):
 
-df = pd.read_csv("Data1.csv")
+                    # The data for the new column
+                    training_col_data = []
+                    testing_col_data = []
 
-N = len(df)
+                    for example in range(train_len):
 
+                        #new_col_data.append(df[col_name][example] ** order)
+                        #print(self.training_x_fs[example])
+                        #print(example)
+                        #print(i)
+                        training_col_data.append(self.training_x_fs[example][i] ** self.order_fs)
 
-# Original features
-orig_col_names = list(df.columns[:-1])
+                    for example in range(test_len):
+                    
+                        testing_col_data.append(self.testing_x_fs[example][i] ** self.order_fs)
 
-# Current order of the regression function
-order = 1
+                    # Create the name for the column
+                    #name = str(i) + " Order: " + str(self.order)
 
-# Separate the data into features
-# x = df.loc[:, df.columns != "Idx"]
+                    # Insert the column
+                    #df.insert(0, name, new_col_data)
 
-# Split the training and testing data into two parts
-# training_x = x.iloc[:-(int(N / 4))]
-# testing_x = x.iloc[-(int(N / 4)):]
+                    #self.training_x_fs = np.append(self.training_x_fs, [training_col_data], axis=1)
+                    self.training_x_fs = np.insert(self.training_x_fs, len(self.training_x_fs[0]), [training_col_data], axis=1)
 
-# Separate the data into classifiers
-# y = df.loc[:, df.columns == "Idx"]
+                    #self.testing_x_fs = np.append(self.testing_x_fs, [testing_col_data], axis=1)
+                    self.testing_x_fs = np.insert(self.testing_x_fs, len(self.testing_x_fs[0]), [testing_col_data], axis=1)
 
-# Take first sample (training)
-df_new = df.sample(frac = 0.75, replace=True)
+            case Question.Regular:
 
-# Remove classifier
-training_x = df_new.loc[:, df.columns != "Idx"]
+                train_len = len(self.training_x)
+                test_len = len(self.testing_x)
 
-# Remove features
-training_y = df_new.loc[:, df.columns == "Idx"]
+                self.order += 1
 
-# Take second sample (testing)
-df_new = df.sample(frac = 0.25, replace=True)
+                for i in range(len(self.orig_col_names)):
 
-# Remove classifier
-testing_x = df_new.loc[:, df.columns != "Idx"]
+                    # The data for the new column
+                    training_col_data = []
+                    testing_col_data = []
 
-# Remove features
-testing_y = df_new.loc[:, df.columns == "Idx"]
+                    for example in range(train_len):
 
+                        #new_col_data.append(df[col_name][example] ** order)
+                        training_col_data.append(self.training_x[example][i] ** self.order)
 
-training_x.reset_index(drop=True, inplace=True)
-testing_x.reset_index(drop=True, inplace=True)
+                    for example in range(test_len):
+                    
+                        testing_col_data.append(self.testing_x[example][i] ** self.order)
 
-#print(df)
-#print(df_new)
-#print(training_x)
-#print(testing_x)
+                    # Create the name for the column
+                    #name = str(i) + " Order: " + str(self.order)
 
+                    # Insert the column
+                    #df.insert(0, name, new_col_data)
+                    
+                    self.training_x = np.insert(self.training_x, len(self.training_x[0]), [training_col_data], axis=1)
 
-# # Split the training and testing data into two parts
-# training_y = y.iloc[:-(int(N / 4))]
-# testing_y = y.iloc[-(int(N / 4)):]
+                    self.testing_x = np.insert(self.testing_x, len(self.testing_x[0]), [testing_col_data], axis=1)
 
-# data.sample(20,random_state=1)
+                #print("Training Row: " + str(self.training_x[0]))
+                #print("Original Number: " + str(self.training_x[0][0]))
+                #print("New Number (squared of original number): " + str(self.training_x[0][4]))
 
-#training_y = y.iloc[:int(N * 0.8)]
-#testing_y = y.iloc[:int(N * 0.2)]
+        #return df
 
-#print(training_x)
-#print(testing_x)
+        # Separate the data into features
+        # x = df.loc[:, df.columns != "Idx"]
 
-#print(training_y)
-#print(testing_y)
+        # Split the training and testing data into two parts
+        # training_x = x.iloc[:-(int(N / 4))]
+        # testing_x = x.iloc[-(int(N / 4)):]
 
-for i in range(5):
+        # Separate the data into classifiers
+        # y = df.loc[:, df.columns == "Idx"]
 
-    # Create the linear regression
-    regr = linear_model.LinearRegression()
+    def read_file(self, filename):
 
-    regr.fit(training_x, training_y)
+        self.df = pd.read_csv(filename)
 
-    predict_y = regr.predict(testing_x)
-    print("Intercept: \n", regr.intercept_)
-    print("\nCoefficients: \n", regr.coef_)
-
-    predict_y_2 = regr.predict(training_x)
-
-    print("\nErrors for testing data: Order " + str(order))
-
-    print("Root Mean Squared Error: \n", mse(testing_y, predict_y, squared=False))
-
-    print("Coefficient of determination: \n", r2_score(testing_y, predict_y))
-
-
-    print("\nErrors for training data: Order " + str(order))
-
-    print("Root Mean Squared Error: \n", mse(training_y, predict_y_2, squared=False))
-
-    print("Coefficient of determination: \n", r2_score(training_y, predict_y_2))
-
-    print()
-
-    order = order + 1
-
-    inc_order(training_x, testing_x, orig_col_names, order)
+        self.N = len(self.df)
 
 
+    def sample_sets(self):
+
+        # Take first sample (training)
+        self.df_new = self.df.sample(frac = 0.75, replace=True)
+
+        # Remove classifier
+        self.training_x = self.df_new.loc[:, self.df.columns != "Idx"]
+
+        # Remove features
+        self.training_y = self.df_new.loc[:, self.df.columns == "Idx"]
+
+        # Take second sample (testing)
+        self.df_new = self.df.sample(frac = 0.25, replace=True)
+
+        # Remove classifier
+        self.testing_x = self.df_new.loc[:, self.df.columns != "Idx"]
+
+        # Remove features
+        self.testing_y = self.df_new.loc[:, self.df.columns == "Idx"]
 
 
+        self.training_x.reset_index(drop=True, inplace=True)
+        self.testing_x.reset_index(drop=True, inplace=True)
+
+        self.training_x = pd.DataFrame.to_numpy(self.training_x)
+        self.training_y = pd.DataFrame.to_numpy(self.training_y)
+
+        self.testing_x = pd.DataFrame.to_numpy(self.testing_x)
+        self.testing_y = pd.DataFrame.to_numpy(self.testing_y)
+
+    
+    def do_feature_scale(self):
+
+        self.scaler = MinMaxScaler()
+
+        self.training_x_fs = self.scaler.fit_transform(self.training_x)
+        self.testing_x_fs = self.scaler.fit_transform(self.testing_x)
+
+        self.training_y_fs = self.scaler.fit_transform(self.training_y)
+        self.testing_y_fs = self.scaler.fit_transform(self.testing_y)
+
+    #print(df)
+    #print(df_new)
+    #print(training_x)
+    #print(testing_x)
 
 
-"""for col in testing_x:
+    # # Split the training and testing data into two parts
+    # training_y = y.iloc[:-(int(N / 4))]
+    # testing_y = y.iloc[-(int(N / 4)):]
 
-    plt.scatter(testing_x[col], testing_y, color="black")
-    plt.plot(testing_x[col], predict_y, color="blue", linewidth=3)
-    plt.xticks()
-    plt.yticks()
-    plt.xlabel(col)
-    plt.ylabel("Idx")
-    plt.show()
+    # data.sample(20,random_state=1)
+
+    #training_y = y.iloc[:int(N * 0.8)]
+    #testing_y = y.iloc[:int(N * 0.2)]
+
+    #print(training_x)
+    #print(testing_x)
+
+    #print(training_y)
+    #print(testing_y)
+
+    def train(self, problem):
+
+        match problem:
+
+            case Question.FeatureScale:
+
+                for i in range(1, self.goal_order):
+
+                    if self.order_fs < i:
+                    
+                        self.inc_order(problem)
+
+                    # Create the linear regression
+                    self.regr = linear_model.LinearRegression()
+
+                    self.regr.fit(self.training_x_fs, self.training_y_fs)
+
+                    self.predict_y = self.regr.predict(self.testing_x_fs)
+                    print("Intercept: \n", self.regr.intercept_)
+                    print("\nCoefficients: \n", self.regr.coef_)
+
+                    self.predict_y_2 = self.regr.predict(self.training_x_fs)
+
+                    print("\nErrors for testing data: Order " + str(i))
+
+                    print("Root Mean Squared Error: \n", mse(self.testing_y_fs, self.predict_y, squared=False))
+
+                    print("Coefficient of determination: \n", r2_score(self.testing_y_fs, self.predict_y))
+
+
+                    print("\nErrors for training data: Order " + str(i))
+
+                    print("Root Mean Squared Error: \n", mse(self.training_y_fs, self.predict_y_2, squared=False))
+
+                    print("Coefficient of determination: \n", r2_score(self.training_y_fs, self.predict_y_2))
+
+                    print()
+
+            case Question.Regular:
+
+                for i in range(1, self.goal_order):
+
+                    if self.order < i:
+                    
+                        self.inc_order(problem)
+
+                    # Create the linear regression
+                    self.regr = linear_model.LinearRegression()
+
+                    self.regr.fit(self.training_x, self.training_y)
+
+                    self.predict_y = self.regr.predict(self.testing_x)
+                    print("Intercept: \n", self.regr.intercept_)
+                    print("\nCoefficients: \n", self.regr.coef_)
+
+                    self.predict_y_2 = self.regr.predict(self.training_x)
+
+                    print("\nErrors for testing data: Order " + str(i))
+
+                    print("Root Mean Squared Error: \n", mse(self.testing_y, self.predict_y, squared=False))
+
+                    print("Coefficient of determination: \n", r2_score(self.testing_y, self.predict_y))
+
+
+                    print("\nErrors for training data: Order " + str(i))
+
+                    print("Root Mean Squared Error: \n", mse(self.training_y, self.predict_y_2, squared=False))
+
+                    print("Coefficient of determination: \n", r2_score(self.training_y, self.predict_y_2))
+
+                    print()
 """
+for col in testing_x:
+plt.scatter(testing_x[col], testing_y, color="black")
+plt.plot(testing_x[col], predict_y, color="blue", linewidth=3)
+plt.xticks()
+plt.yticks()
+plt.xlabel(col)
+plt.ylabel("Idx")
+plt.show()
+"""
+
+if __name__ == "__main__":
+    
+    # Initialize the object
+    linRegr = LinRegr("Data1.csv", 40)
+    #gradient_descent = gd("Data1.csv")
+
+    myProblems = [Question.FeatureScale]
+
+    for Problem in myProblems:
+
+        match Problem:
+
+            case Question.Regular:
+
+                linRegr.train(Problem)
+                #print("Lin Regr")
+
+            case Question.Gradient:
+
+                #print(gradient_descent.train())
+                print("Gradient Descent Here...")
+
+            case Question.FeatureScale:
+
+                linRegr.train(Problem)
+                #print("Feature Scaling")

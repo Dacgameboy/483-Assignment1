@@ -1,247 +1,377 @@
 import pandas as pd
+import numpy as np
+
+np.set_printoptions(suppress = True)
 
 # Can use numpy for matrix multiplication
+class Gradient:
 
-# First value when ran (likely an error) (4 indexes, 1 iteration)
-# [-7698.137553979965, 90291.33301864793, -96060.81900108558, -1142634951.9588823]
+    def __init__(self, filename, alpha, classifier, order, iterations):
 
-# Second value when ran (4 indexes, 1 iteration)
-# [-24.021220166334658, -6943.090548156954, 25445126.826429952, 7393.083055041451]
+        self.iterations = iterations
 
-# Third value when ran (5 indexes, 1 iteration)
-# [-24.02164967971531, -6943.198960068693, 25514854.78276097, 7393.694247770547, 87921339.90770519]
+        self.order = order
 
+        self.alpha = alpha
 
-# Fourth value when ran (5 indexes, 1 iteration)
-# [0.7998115791036531, -60.58472767016169, 1782.692193356475, 1.5175421064569572, 6156.754601682345]
+        self.classifier = classifier
 
-# Fifth value when ran (5 indexes, 2 iteration)
-# [15.53820184006398, 4461.260065419933, -129032.87018370129, -36.482797711187075, -445819.18046466226]
+        self.read_file(filename)
 
-# Test data
-# [1.1000134637058878, 2.0508316094219734]
+        self.orig_col_names = list(self.df.columns[1:-1])
 
-def Residual_Sum(w, x, y, num_examples, getMean = False):
-    sum = 0
+        self.create_w([1] * (len(self.orig_col_names) + 1))
+        #self.create_w([1, 303.120603174602093, 121.04723619047618, 0.03469134254241905, 415.238296909286])
 
-    if not getMean:
-        for i in range(num_examples):
-            sum += (y.iat[i, 0] - get_predict_val(w, x.iloc[[i]]))**2
-        return sum
+        self.sample_sets()
 
-    else:
-        mean = 0
-        for i in range(num_examples):
-            predict_y = get_predict_val(w, x.iloc[[i]])
-            sum += (y.iat[i, 0] - predict_y)**2
-            mean += predict_y
-        mean /= num_examples
+        if self.order > 1:
 
-    return sum, mean
-
-def RMSE(w, x, y, num_examples):
-    RMSE = (Residual_Sum(w, x, y, num_examples)/num_examples) ** (1/2)
-    return RMSE
-
-def R_Sq(w, x, y, num_examples):
-    RSS, Mean = Residual_Sum(w, x, y, num_examples, True)
-    sum = 0
-    for i in range(num_examples):
-       sum += (y.iat[i, 0] - Mean) ** 2
-    
-    return 1 - (RSS/sum)
-    
-
-# Can be adjusted as needed
-alpha = 0.8 #0.008
-
-classifier = "Idx"
-
-# This function adds a new column for each ORIGINAL column that existed in the dataset
-# with raised to a power of "order"
-#
-# df - Data frame
-# data_len - Number of examples (N)
-# orig_col_names - A list of the original feature names
-# order - The order to increase to
-def inc_order(w, training_x, testing_x, orig_col_names, order):
-
-    train_len = len(training_x)
-    test_len = len(testing_x)
-
-    for col_name in orig_col_names:
-
-        # The data for the new column
-        training_col_data = []
-        testing_col_data = []
-
-        for example in range(train_len):
-
-            #new_col_data.append(df[col_name][example] ** order)
-            training_col_data.append(training_x[col_name][example] ** order)
-
-        for example in range(test_len):
+            self.inc_order()
         
-            testing_col_data.append(testing_x[col_name][example] ** order)
-
-        # Create the name for the column
-        name = col_name + " Order: " + str(order)
-
-        # Insert the column
-        #df.insert(0, name, new_col_data)
-
-        #training_x = pd.concat([training_x, training_col_data], axis = 1)
-
-        #testing_x = pd.concat([testing_x, testing_col_data], axis = 1)
-
-        training_x[name] = training_col_data
-
-        #training_x.insert(0, name, training_col_data, True)
-
-        testing_x[name] = testing_col_data
-
-        #testing_x.insert(0, name, testing_col_data, True)
-
-        w.append(1)
-
-# Dot Product
-#
-# w - An array of w values
-# x - An array containing one example
-def get_predict_val(w, x):
-
-    x.reset_index(drop=True, inplace=True)
-
-    #if len(w) != len(x.columns) + 1:
-
-    #    print(len(w))
-    #    print(len(x.columns))
-    #    exit(1)
-
-    # The sum starts with the intercept
-    predict_val = w[0]
-
-    #print("x's length: " + str(len(x.columns)))
-
-    for i in range(len(x.columns)):
-
-        predict_val += (w[i + 1] * x.iat[0, i])
-
-        #print("Multiplying " + str(w[i + 1]) + " and " + str(x.iat[0, i]))
-
-    return predict_val
-
-
-# w - A list of each feature's current value (the thing we're training)
-# x - A list containing every point we're plugging into the summation
-# y - A list containing the expected output value
-# alpha - The learning rate
-# num_examples - The number of rows in x
-def train_data(w, x, y, alpha, num_examples):
-
-    N = len(w)
-
-    v = []
     
-    for j in range(N):
-
-        print("Training w at index " + str(j) + "...")
-
+    def Residual_Sum(self, x, y, getMean = False):
         sum = 0
+        num_examples = len(x)
 
-        for i in range(num_examples):
-
-            if j == 0:
-
-                x_val = 1
-
-            else:
-
-                x_val = x.iat[i, j - 1]
-
-            #print("x multiple is: " + str(x_val))
-
-            #a = str(get_predict_val(w, x.iloc[[i]]))
-            #b = str(y.iat[i, 0])
-            #c = str(x_val)
-
-            #print("Adding (" + a + " - " + b + ") * " + c + " to the sum...")
-
-            sum += (get_predict_val(w, x.iloc[[i]]) - y.iat[i, 0]) * x_val
-
-            #print(sum)
-
-        #print("The gradient is: " + str(sum))
-
-        sum *= (alpha / num_examples)
-
-        v.append(w[j] - sum)
-
-        #w[j] -= sum
-
-    #print("V = " + str(v))
-
-    return v
+        if not getMean:
             
+            for i in range(num_examples):
+                #predict_val = w[0]
+                predict_val = np.dot(self.w, x[i])
+                sum += (y[i, 0] - predict_val)**2
+            return sum
 
-# Transform pandas df to numpy array
-#df = pd.read_csv("Data1.csv")
-#df = pd.read_csv("Test_Data.csv")
-df = pd.read_csv("Data1.csv")
+        else:
+            mean = 0
+            for i in range(num_examples):
+                #predict_y = w[0]
+                predict_y = np.dot(self.w, x[i])
+                sum += (y[i, 0] - predict_y)**2
+                mean += predict_y
+            mean /= num_examples
 
-N = len(df)
+        return sum, mean
 
-# Original features
-orig_col_names = list(df.columns[:-1])
+    def RMSE(self, x, y):
+        num_examples = len(x)
+        RMSE = (self.Residual_Sum(x, y)/num_examples) ** (1/2)
+        return RMSE
 
-# initial values for w
-w = [0.01] * (len(orig_col_names) + 1)
+    def R_Sq(self, x, y):
+        num_examples = len(x)
+        RSS, Mean = self.Residual_Sum(x, y, True)
+        sum = 0
+        for i in range(num_examples):
+            sum += (y[i, 0] - Mean) ** 2
+        
+        return 1 - (RSS/sum)
 
-# Take first sample (training)
-#df_new = df.sample(frac = 0.75, replace=True)
+    #inc_fluct_rate = 0.5 # 1.2
 
-# Remove classifier
-training_x = df.loc[:, df.columns != classifier]
+    #dec_fluct_rate = 0.5 # 0.14
 
-# Remove features
-training_y = df.loc[:, df.columns == classifier]
+    # This function adds a new column for each ORIGINAL column that existed in the dataset
+    # with raised to a power of "order"
+    #
+    # df - Data frame
+    # data_len - Number of examples (N)
+    # orig_col_names - A list of the original feature names
+    # order - The order to increase to
+    def inc_order(self):
 
-# Take second sample (testing)
-df_new = df.sample(frac = 0.25, replace=True)
+        train_len = len(self.training_x_numpy)
+        test_len = len(self.testing_x_numpy)
 
-# Remove classifier
-testing_x = df_new.loc[:, df.columns != classifier]
+        for i in range(len(self.orig_col_names)):
 
-# Remove features
-testing_y = df_new.loc[:, df.columns == classifier]
+            # The data for the new column
+            training_col_data = []
+            testing_col_data = []
+
+            for example in range(train_len):
+
+                #new_col_data.append(df[col_name][example] ** order)
+                training_col_data.append(self.training_x_numpy[example][i + 1] ** self.order)
+
+            for example in range(test_len):
+            
+                testing_col_data.append(self.testing_x_numpy[example][i + 1] ** self.order)
+
+            # Create the name for the column
+            #name = str(i) + " Order: " + str(self.order)
+
+            # Insert the column
+            #df.insert(0, name, new_col_data)
+
+            #training_x = pd.concat([training_x, training_col_data], axis = 1)
+
+            #testing_x = pd.concat([testing_x, testing_col_data], axis = 1)
+
+            self.training_x_numpy = np.insert(self.training_x_numpy, len(self.training_x_numpy[0]), [training_col_data], axis=1)
+
+            #training_x.insert(0, name, training_col_data, True)
+
+            self.testing_x_numpy = np.insert(self.testing_x_numpy, len(self.testing_x_numpy[0]), [testing_col_data], axis=1)
+
+            #testing_x.insert(0, name, testing_col_data, True)
+
+            self.w = np.append(self.w, [1])
 
 
-training_x.reset_index(drop=True, inplace=True)
-testing_x.reset_index(drop=True, inplace=True)
+    # w - A list of each feature's current value (the thing we're training)
+    # x - A list containing every point we're plugging into the summation
+    # y - A list containing the expected output value
+    # alpha - The learning rate
+    # num_examples - The number of rows in x
+    def train_data(self, x, y):
 
-training_y.reset_index(drop=True, inplace=True)
-testing_y.reset_index(drop=True, inplace=True)
+        N = len(self.w)
 
-#inc_order(w, training_x, testing_x, orig_col_names, 1)
-#inc_order(w, training_x, testing_x, orig_col_names, 2)
-#inc_order(w, training_x, testing_x, orig_col_names, 3)
+        num_examples = len(x)
 
-#for i in range(2, 10):
+        # This is the new gradient / old gradient summed
+        #g_change = 0
 
-#    inc_order(w, training_x, testing_x, orig_col_names, i)
+        #new_g = 0
+        #old_g = 0
+
+        #v = []
+        #self.v = np.array([])
+
+        v = np.array([])
+        
+        for j in range(N):
+
+            #print("Training w at index " + str(j) + "...")
+
+            sum = 0
+
+            for i in range(num_examples):
+
+                #if j == 0:
+
+                #    x_val = 1
+
+                #else:
+
+                #    x_val = x[i, j - 1]
+
+                x_val = x[i][j]
+
+                #print("Adding (" + a + " - " + b + ") * " + c + " to the sum...")
+
+                #predict_val = w[0]
+
+                #print("Dotting " + str(self.w) + " and " + str(x[i]))
+
+                self.predict_val = np.dot(self.w, x[i])
+
+                # Gradient
+                sum += (self.predict_val - y[i][0]) * x_val
+                
+            print("Gradient for index " + str(j) + ": " + str(sum))
+
+            #if gradient[j] != None:
+
+                # Store the new and old gradient values
+            #    new_g = abs(sum)
+            #    old_g = abs(gradient[j])
+
+                # Update the sum of all gradients, g_change
+            #    if new_g > old_g:
+
+            #        g_change += (new_g % old_g) / old_g
+
+            #    elif new_g < old_g:
+
+            #        g_change -= (new_g / old_g)
+            
+                #new_g += sum
+                #old_g += gradient[j]
+
+            # Update the old gradient
+            #gradient[j] = sum
+
+            # At this point, we have a gradient calculated
+
+            #print("The gradient is: " + str(sum))
+
+            sum = sum * (self.alpha / num_examples)
+
+            v = np.append(v, [self.w[j] - sum])
 
 
-print(training_x)
-print(training_y)
+            #v = np.append(self.v, [self.w[j] - sum])
 
-print("w: " + str(w))
+            #w[j] -= sum
 
-for i in range(1000):
+        # Check if we're overshooting on average
+        #if g_change > 0:
 
-    w = train_data(w, training_x, training_y, alpha, len(training_x))
+        #    print("The gradient change is positive (" + str(g_change) + ")! Reducing alpha")
+        #    alpha = (alpha * dec_fluct_rate) * (1 - (min(1, g_change) / N))
 
-    print(w)
+        #elif g_change < 0:
 
-    print("RMSE: " + str(RMSE(w, training_x, training_y, len(training_x))))
+        #    print("The gradient change is negative(" + str(g_change) + ")! Increasing alpha")
+        #    alpha = alpha * (1 + (((min(1, abs(g_change)) / N)) * inc_fluct_rate))
 
-    print("R^2: " + str(R_Sq(w, training_x, training_y, len(training_x))))
+        #if old_g != 0:
+
+        #    g_change += abs(new_g) / abs(old_g)
+
+        #    alpha = (alpha * fluct_rate) * (1 - ((1 / N) * g_change))
+
+        #return v #, alpha
+
+        self.w = v
+                
+
+    def read_file(self, filename):
+
+        self.df = pd.read_csv(filename)
+
+        self.df.insert(0, "Constant", [1] * len(self.df))
+        
+        
+    def create_w(self, arr):
+
+        self.w = np.array(arr)
+        
+        
+    def sample_sets(self):
+
+        # Take first sample (training)
+        df_new = self.df.sample(frac = 0.75, replace=True)
+
+        # Remove classifier
+        self.training_x_numpy = df_new.loc[:, self.df.columns != self.classifier]
+
+        # Remove features
+        self.training_y_numpy = df_new.loc[:, self.df.columns == self.classifier]
+
+        # Take second sample (testing)
+        df_new = self.df.sample(frac = 0.25, replace=True)
+
+        # Remove classifier
+        self.testing_x_numpy = df_new.loc[:, self.df.columns != self.classifier]
+
+        # Remove features
+        self.testing_y_numpy = df_new.loc[:, self.df.columns == self.classifier]
+
+
+        self.training_x_numpy.reset_index(drop=True, inplace=True)
+        self.testing_x_numpy.reset_index(drop=True, inplace=True)
+
+        self.training_y_numpy.reset_index(drop=True, inplace=True)
+        self.testing_y_numpy.reset_index(drop=True, inplace=True)
+
+        self.training_x_numpy = self.training_x_numpy.to_numpy()    
+        self.testing_x_numpy = self.testing_x_numpy.to_numpy()
+
+        self.training_y_numpy = self.training_y_numpy.to_numpy()    
+        self.testing_y_numpy = self.testing_y_numpy.to_numpy()
+
+        print("Mean 1: " + str(self.training_x_numpy[:, 1].mean()))
+        print("Mean 2: " + str(self.training_x_numpy[:, 2].mean()))
+        print("Mean 3: " + str(self.training_x_numpy[:, 3].mean()))
+        print("Mean 4: " + str(self.training_x_numpy[:, 4].mean()))
+
+        #print(self.training_x_numpy)
+        #print(self.training_y_numpy)
+
+    # Original features
+    
+
+    # initial values for w
+    #w = [1] * (len(orig_col_names) + 1)
+
+    #w = np.array([0.01] * (len(orig_col_names) + 1))
+    #w = np.array([0.999823,   -0.13085741,  0.01604778,  0.99986325,  0.21832722])
+
+    #w = np.array([611.18305705,12485.69095535,-453.59327085,-1.74367274,-9023.79250752])
+
+    #w = np.array([67.956433, 0.03722, -0.004231477, -5.58388, -0.0591527])
+
+    # # Take first sample (training)
+    # df_new = df.sample(frac = 0.02, replace=True)
+
+    # # Remove classifier
+    # training_x = df_new.loc[:, df.columns != classifier]
+
+    # # Remove features
+    # training_y = df_new.loc[:, df.columns == classifier]
+
+    # # Take second sample (testing)
+    # df_new = df.sample(frac = 0.25, replace=True)
+
+    # # Remove classifier
+    # testing_x = df_new.loc[:, df.columns != classifier]
+
+    # # Remove features
+    # testing_y = df_new.loc[:, df.columns == classifier]
+
+
+    # training_x.reset_index(drop=True, inplace=True)
+    # testing_x.reset_index(drop=True, inplace=True)
+
+    # training_y.reset_index(drop=True, inplace=True)
+    # testing_y.reset_index(drop=True, inplace=True)
+
+    #inc_order(w, training_x, testing_x, orig_col_names, 1)
+    #w = inc_order(w, training_x, testing_x, orig_col_names, 2)
+    #w = inc_order(w, training_x, testing_x, orig_col_names, 3)
+    #w = inc_order(w, training_x, testing_x, orig_col_names, 4)
+    #w = inc_order(w, training_x, testing_x, orig_col_names, 5)
+
+
+    #for i in range(2, 10):
+
+    #    inc_order(w, training_x, testing_x, orig_col_names, i)
+
+
+    # print(training_x)
+    # print(training_y)
+
+    # Convert training_x and training_y to numpy
+    # training_x_numpy = training_x.to_numpy()    
+    # training_y_numpy = training_y.to_numpy()
+
+    #w = training_x_numpy[0]
+    def train(self):
+
+        print("w: " + str(self.w))
+
+        print("Alpha: " + str(self.alpha))
+
+        #gradient = [None] * len(w)
+
+        for i in range(self.iterations):
+
+            # Convert training_x and training_y to numpy
+            #training_x_numpy = training_x.to_numpy()    
+            #training_y_numpy = training_y.to_numpy()
+
+            self.train_data(self.training_x_numpy, self.training_y_numpy)
+
+            print("\n\n")
+
+            print("w: " + str(self.w))
+
+            print("RMSE: " + str(self.RMSE(self.training_x_numpy, self.training_y_numpy)))
+
+            print("R^2: " + str(self.R_Sq(self.training_x_numpy, self.training_y_numpy)))
+
+            #print("Alpha: " + str(alpha))
+
+            #print("Gradient: " + str(self.gradient))
+
+
+
+
+if __name__ == "__main__":
+
+    gd = Gradient("Data1.csv", 0.000007, "Idx", 1, 20)
+
+    gd.train()
