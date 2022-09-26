@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from question import Question
 from sklearn import model_selection
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import Lasso
@@ -10,12 +11,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from enum import Enum
 from math import sqrt
 
-class Question(Enum):
-    Regular = "df"
-    K_Fold = "kf"
+# class Question(Enum):
+#     Regular = "df"
+#     K_Fold = "kf"
 
 class LassoRidgeElastic:
     
@@ -77,7 +77,7 @@ class LassoRidgeElastic:
                     #self.testing_x_fs = np.append(self.testing_x_fs, [testing_col_data], axis=1)
                     #self.testing_x_fs = np.insert(self.testing_x_fs, len(self.testing_x_fs[0]), [testing_col_data], axis=1)
 
-            case Question.Regular:
+            case Question.NormReg:
 
                 train_len = len(self.X_train)
                 test_len = len(self.X_test)
@@ -163,7 +163,7 @@ class LassoRidgeElastic:
 
     def do_K_Fold(self, k = 0):
         
-        self.kf = KFold(n_splits = k)
+        self.kf = KFold(n_splits = k, shuffle = True)
 
         self.X_kf = self.df.loc[:, self.df.columns != "Idx"]
         self.y_kf = self.df.loc[:, self.df.columns == "Idx"]
@@ -186,6 +186,8 @@ class LassoRidgeElastic:
                     if self.order < i:
                     
                         self.inc_order(Problem)
+
+                    fold_number = 1
                     
                     for train_index, test_index in self.kf.split(self.X_kf):
 
@@ -193,11 +195,14 @@ class LassoRidgeElastic:
                         self.X_train_kf, self.X_test_kf = self.X_kf[train_index], self.X_kf[test_index]
                         self.y_train_kf, self.y_test_kf = self.y_kf[train_index], self.y_kf[test_index]
 
-                        print("Testing X: " + str(self.X_test_kf))
-                        print("Testing Y: " + str(self.X_test_kf))
+                        #print("Testing X: " + str(self.X_test_kf))
+                        #print("Testing Y: " + str(self.X_test_kf))
+
+                        print("Order: " + str(i))
+                        print("Fold Number: " + str(fold_number))
 
                         print("\nRidge:")
-                        rr = Ridge(alpha=0.01)
+                        rr = Ridge(alpha=0.3)
                         rr.fit(self.X_train_kf, self.y_train_kf)
                         pred_train_rr = rr.predict(self.X_train_kf)
                         print("Intercept: " + str(rr.intercept_))
@@ -209,8 +214,11 @@ class LassoRidgeElastic:
                         print("Testing RMSE: " + str(np.sqrt(mean_squared_error(self.y_test_kf, pred_test_rr))))
                         print("Testing Coefficient of Determination: " + str(r2_score(self.y_test_kf, pred_test_rr)))
 
+                        print("\nOrder: " + str(i))
+                        print("Fold Number: " + str(fold_number))
+
                         print("\n\nLasso: ")
-                        model_lasso = Lasso(alpha=0.0001)
+                        model_lasso = Lasso(alpha=0.3)
                         model_lasso.fit(self.X_train_kf, self.y_train_kf)
                         pred_train_lasso = model_lasso.predict(self.X_train_kf)
                         print("Intercept: " + str(model_lasso.intercept_))
@@ -219,12 +227,15 @@ class LassoRidgeElastic:
                         print("Training Coefficient of Determination: " + str(r2_score(self.y_train_kf, pred_train_lasso)))
 
                         pred_test_lasso = model_lasso.predict(self.X_test_kf)
-                        print(np.sqrt(mean_squared_error(self.y_test_kf, pred_test_lasso)))
-                        print(r2_score(self.y_test_kf, pred_test_lasso))
+                        print("Testing RMSE: " + str(np.sqrt(mean_squared_error(self.y_test_kf, pred_test_lasso))))
+                        print("Testing Coefficient of Determination: " + str(r2_score(self.y_test_kf, pred_test_lasso)))
+
+                        print("\nOrder: " + str(i))
+                        print("Fold Number: " + str(fold_number))
 
                         # Elastic Net
                         print("\n\nElastic Net: ")
-                        model_enet = ElasticNet(alpha=0.00001)
+                        model_enet = ElasticNet(alpha=0.3)
                         model_enet.fit(self.X_train_kf, self.y_train_kf)
                         pred_train_enet = model_enet.predict(self.X_train_kf)
                         print("Intercept: " + str(model_enet.intercept_))
@@ -237,8 +248,10 @@ class LassoRidgeElastic:
                         print("Testing Coefficient of Determination: " + str(r2_score(self.y_test_kf, pred_test_enet)))
 
                         print("\n\n")
+
+                        fold_number += 1
             
-            case Question.Regular:
+            case Question.NormReg:
 
                 for i in range(1, self.goal_order):
 
@@ -247,11 +260,11 @@ class LassoRidgeElastic:
                         self.inc_order(Problem)
 
                     print("\nRidge:")
-                    rr = Ridge(alpha=0.01)
-                    rr = make_pipeline(StandardScaler(with_mean=False), Ridge())
+                    rr = Ridge(alpha=0.3)
+                    #rr = make_pipeline(('scl', StandardScaler(with_mean=False)), Ridge())
                     rr.fit(self.X_train, self.y_train)
                     pred_train_rr = rr.predict(self.X_train)
-                    #print("Intercept: " + str(rr.intercept_))
+                    print("Intercept: " + str(rr.intercept_))
                     print("Coefficients: " + str(rr.coef_))
                     print("Training RMSE: " + str(np.sqrt(mean_squared_error(self.y_train, pred_train_rr))))
                     print("Training Coefficient of Determination: " + str(r2_score(self.y_train, pred_train_rr)))
@@ -262,7 +275,7 @@ class LassoRidgeElastic:
 
 
                     print("\nLasso: ")
-                    model_lasso = Lasso(alpha=0.0001)
+                    model_lasso = Lasso(alpha=0.3)
                     model_lasso.fit(self.X_train, self.y_train)
                     pred_train_lasso = model_lasso.predict(self.X_train)
                     print("Intercept: " + str(model_lasso.intercept_))
@@ -276,7 +289,7 @@ class LassoRidgeElastic:
 
                     # Elastic Net
                     print("\nElastic Net: ")
-                    model_enet = ElasticNet(alpha=0.00001)
+                    model_enet = ElasticNet(alpha=0.3)
                     model_enet.fit(self.X_train, self.y_train)
                     pred_train_enet = model_enet.predict(self.X_train)
                     print("Intercept: " + str(model_enet.intercept_))
@@ -294,16 +307,16 @@ class LassoRidgeElastic:
 if __name__ == "__main__":
 
     # Initialize the object
-    lre = LassoRidgeElastic("Data1.csv", 3)
+    lre = LassoRidgeElastic("Data1.csv", 2, 4)
     #gradient_descent = gd("Data1.csv")
 
-    myProblems = [Question.Regular]
+    myProblems = [Question.K_Fold]
 
     for Problem in myProblems:
 
         match Problem:
 
-            case Question.Regular:
+            case Question.NormReg:
 
                 lre.train(Problem)
                 #print("Lin Regr")

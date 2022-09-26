@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from enum import Enum
 from sklearn import datasets, linear_model
 from sklearn.metrics import mean_squared_error as mse, r2_score
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
+from question import Question
 
-class Question(Enum):
-    FeatureScale = "fs"
-    Regular = "df"
-    Gradient = "gd"
+# class Question(Enum):
+#     FeatureScale = "fs"
+#     Regular = "df"
+#     Gradient = "gd"
 
 class LinRegr:
 
@@ -81,7 +81,7 @@ class LinRegr:
                     #self.testing_x_fs = np.append(self.testing_x_fs, [testing_col_data], axis=1)
                     self.testing_x_fs = np.insert(self.testing_x_fs, len(self.testing_x_fs[0]), [testing_col_data], axis=1)
 
-            case Question.Regular:
+            case Question.LinReg:
 
                 train_len = len(self.training_x)
                 test_len = len(self.testing_x)
@@ -174,8 +174,8 @@ class LinRegr:
         self.training_x_fs = self.scaler.fit_transform(self.training_x)
         self.testing_x_fs = self.scaler.fit_transform(self.testing_x)
 
-        self.training_y_fs = self.scaler.fit_transform(self.training_y)
-        self.testing_y_fs = self.scaler.fit_transform(self.testing_y)
+        #self.training_y_fs = self.scaler.fit_transform(self.training_y)
+        #self.testing_y_fs = self.scaler.fit_transform(self.testing_y)
 
     #print(df)
     #print(df_new)
@@ -213,7 +213,7 @@ class LinRegr:
                     # Create the linear regression
                     self.regr = linear_model.LinearRegression()
 
-                    self.regr.fit(self.training_x_fs, self.training_y_fs)
+                    self.regr.fit(self.training_x_fs, self.training_y)
 
                     self.predict_y = self.regr.predict(self.testing_x_fs)
                     print("Intercept: \n", self.regr.intercept_)
@@ -223,20 +223,20 @@ class LinRegr:
 
                     print("\nErrors for testing data: Order " + str(i))
 
-                    print("Root Mean Squared Error: \n", mse(self.testing_y_fs, self.predict_y, squared=False))
+                    print("Root Mean Squared Error: \n", mse(self.testing_y, self.predict_y, squared=False))
 
-                    print("Coefficient of determination: \n", r2_score(self.testing_y_fs, self.predict_y))
+                    print("Coefficient of determination: \n", r2_score(self.testing_y, self.predict_y))
 
 
                     print("\nErrors for training data: Order " + str(i))
 
-                    print("Root Mean Squared Error: \n", mse(self.training_y_fs, self.predict_y_2, squared=False))
+                    print("Root Mean Squared Error: \n", mse(self.training_y, self.predict_y_2, squared=False))
 
-                    print("Coefficient of determination: \n", r2_score(self.training_y_fs, self.predict_y_2))
+                    print("Coefficient of determination: \n", r2_score(self.training_y, self.predict_y_2))
 
                     print()
 
-            case Question.Regular:
+            case Question.LinReg:
 
                 for i in range(1, self.goal_order):
 
@@ -283,7 +283,7 @@ plt.show()
 if __name__ == "__main__":
     
     # Initialize the object
-    linRegr = LinRegr("Data1.csv", 40)
+    linRegr = LinRegr("Data1.csv", 10)
     #gradient_descent = gd("Data1.csv")
 
     myProblems = [Question.FeatureScale]
@@ -292,7 +292,7 @@ if __name__ == "__main__":
 
         match Problem:
 
-            case Question.Regular:
+            case Question.LinReg:
 
                 linRegr.train(Problem)
                 #print("Lin Regr")

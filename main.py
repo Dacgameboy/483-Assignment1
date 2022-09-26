@@ -1,18 +1,16 @@
 from lin_regr import *
 from gradient import *
+from lasso_ridge_elastic import *
 
-# Initialize the object
-linRegr = LinRegr("Data1.csv", 5)
-#gradient_descent = gd("Data1.csv")
-
-myProblems = [Question.FeatureScale, Question.Gradient]
+myProblems = [Question.K_Fold, Question.FeatureScale, Question.Gradient, Question.NormReg]
 
 for Problem in myProblems:
 
     match Problem:
 
-        case Question.Regular:
-
+        case Question.LinReg:
+            
+            linRegr = LinRegr("Data1.csv", 5)
             linRegr.train(Problem)
 
         case Question.Gradient:
@@ -22,4 +20,15 @@ for Problem in myProblems:
 
         case Question.FeatureScale:
 
+            linRegr = LinRegr("Data1.csv", 5)
             linRegr.train(Problem)
+
+        case Question.NormReg:
+
+            lre = LassoRidgeElastic("Data1.csv", 2)
+            lre.train(Problem)
+            
+        case Question.K_Fold:
+
+            lre = LassoRidgeElastic("Data1.csv", 2, 4)
+            lre.train(Problem)
