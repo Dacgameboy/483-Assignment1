@@ -1,17 +1,20 @@
 import time as t
 import pandas as pd
 import numpy as np
+from sklearn.metrics import mean_squared_error as mse, r2_score
+from random import randint
 
 np.set_printoptions(suppress = True)
 
 # Can use numpy for matrix multiplication
 class Gradient:
 
-    def __init__(self, filename, alpha, classifier, order, iterations):
+    def __init__(self, filename, alpha, classifier, iterations = 5, goal_order = 1):
 
         self.iterations = iterations
 
-        self.order = order
+        self.order = 1
+        self.goal_order = goal_order + 1
 
         self.alpha = alpha
 
@@ -21,16 +24,26 @@ class Gradient:
 
         self.orig_col_names = list(self.df.columns[1:-1])
 
-        self.create_w([1] * (len(self.orig_col_names) + 1))
+        #self.create_w([1] * (len(self.orig_col_names) + 1))
+        self.create_w()
         #self.create_w([1, 303.120603174602093, 121.04723619047618, 0.03469134254241905, 415.238296909286])
 
         self.sample_sets()
-
-        if self.order > 1:
-
-            self.inc_order()
         
     
+    def get_predict_y(self, x):
+
+        #predict_y = np.array([])
+        predict_y = []
+        
+        for i in range(len(x)):
+
+            #predict_y = np.append(predict_y, np.dot(self.w, x[i]))
+            predict_y.append(np.dot(self.w, x[i]))
+
+        return predict_y
+
+
     def Residual_Sum(self, x, y, getMean = False):
         sum = 0
         num_examples = len(x)
@@ -84,6 +97,8 @@ class Gradient:
         train_len = len(self.training_x_numpy)
         test_len = len(self.testing_x_numpy)
 
+        self.order += 1
+
         for i in range(len(self.orig_col_names)):
 
             # The data for the new column
@@ -117,7 +132,9 @@ class Gradient:
 
             #testing_x.insert(0, name, testing_col_data, True)
 
-            self.w = np.append(self.w, [1])
+            #self.w = np.append(self.w, [1])
+            self.w.append(randint(-100, 100))
+            #self.w.append(randint())
 
 
     # w - A list of each feature's current value (the thing we're training)
@@ -140,7 +157,8 @@ class Gradient:
         #v = []
         #self.v = np.array([])
 
-        v = np.array([])
+        #v = np.array([])
+        v = []
         
         for j in range(N):
 
@@ -200,7 +218,8 @@ class Gradient:
 
             sum = sum * (self.alpha / num_examples)
 
-            v = np.append(v, [self.w[j] - sum])
+            #v = np.append(v, [self.w[j] - sum])
+            v.append(self.w[j] - sum)
 
 
             #v = np.append(self.v, [self.w[j] - sum])
@@ -236,9 +255,18 @@ class Gradient:
         self.df.insert(0, "Constant", [1] * len(self.df))
         
         
-    def create_w(self, arr):
+    def create_w(self):
 
-        self.w = np.array(arr)
+        self.w = [55.61910549, 3.72604117, -1.19312689, -0.09456504, -6.00524466]
+
+        #self.w = []
+
+        #for _ in range(len(self.orig_col_names) + 1):
+
+        #    self.w.append(randint(-10, 60))
+
+        #self.w = np.array(arr)
+        #self.w = arr
         
         
     def sample_sets(self):
@@ -342,43 +370,81 @@ class Gradient:
     #w = training_x_numpy[0]
     def train(self):
 
-        print("w: " + str(self.w))
+        print("Initial w: " + str(self.w))
 
-        print("Alpha: " + str(self.alpha))
+        print("Initial Alpha: " + str(self.alpha))
+
+        print()
 
         #gradient = [None] * len(w)
-
-        StartTime = t.time()
-        
-        for i in range(self.iterations):
-
-            # Convert training_x and training_y to numpy
-            #training_x_numpy = training_x.to_numpy()    
-            #training_y_numpy = training_y.to_numpy()
-
-            self.train_data(self.training_x_numpy, self.training_y_numpy)
-
-            print("\n\n")
-
-            print("w: " + str(self.w))
-
-            print("RMSE: " + str(self.RMSE(self.training_x_numpy, self.training_y_numpy)))
-
-            print("R^2: " + str(self.R_Sq(self.training_x_numpy, self.training_y_numpy)))
-
-            #print("Alpha: " + str(alpha))
-
-            #print("Gradient: " + str(self.gradient))
+        for i in range(1, self.goal_order):
             
-        EndTime = t.time()
+            print("Training Order " + str(i))
 
-        print("Total Time: " + str(EndTime - StartTime) + " seconds")
+            if self.order < i:
+                    
+                self.inc_order()
 
+            StartTime = t.time()
+            
+            for _ in range(self.iterations):
 
+                # Convert training_x and training_y to numpy
+                #training_x_numpy = training_x.to_numpy()    
+                #training_y_numpy = training_y.to_numpy()
+
+                self.train_data(self.training_x_numpy, self.training_y_numpy)
+
+                #self.predict_y = self.get_predict_y(self.training_x_numpy)
+
+                print("\n\n")
+
+                print("w: " + str(self.w))
+
+                print("Training RMSE: " + str(self.RMSE(self.training_x_numpy, self.training_y_numpy)))
+
+                print("Training Coefficients of Determination: " + str(self.R_Sq(self.training_x_numpy, self.training_y_numpy)))
+
+                #print("Training RMSE (Library): " + str(mse(self.training_y_numpy, self.predict_y, squared=False)))
+
+                #print("Training Coefficient of determination (Library): ", r2_score(self.training_y_numpy, self.predict_y))
+
+                # print("Testing RMSE: " + str(self.RMSE(self.testing_x_numpy, self.testing_y_numpy)))
+
+                # print("Testing Coefficients of Determination: " + str(self.R_Sq(self.testing_x_numpy, self.testing_y_numpy)))
+
+                #print("Alpha: " + str(alpha))
+
+                #print("Gradient: " + str(self.gradient))
+
+            self.predict_y = self.get_predict_y(self.training_x_numpy)
+
+            print("Training RMSE (Library): " + str(mse(self.training_y_numpy, self.predict_y, squared=False)))
+
+            print("X vals: " + str(self.training_x_numpy))
+
+            print("Training_y_numpy: " + str(self.training_y_numpy[0]))
+
+            print("Predict_y: " + str(self.predict_y[0]))
+
+            print("Training Coefficient of determination (Library): " + str(r2_score(self.training_y_numpy, self.predict_y)))
+                
+            EndTime = t.time()
+
+            # print("Training RMSE: " + str(self.RMSE(self.training_x_numpy, self.training_y_numpy)))
+
+            # print("Training Coefficients of Determination: " + str(self.R_Sq(self.training_x_numpy, self.training_y_numpy)))
+
+            # print("Testing RMSE: " + str(self.RMSE(self.testing_x_numpy, self.testing_y_numpy)))
+
+            # print("Testing Coefficients of Determination: " + str(self.R_Sq(self.testing_x_numpy, self.testing_y_numpy)))
+
+            print("Total Time: " + str(EndTime - StartTime) + " seconds")
+        
 
 
 if __name__ == "__main__":
 
-    gd = Gradient("Data1.csv", 0.000007, "Idx", 1, 20)
+    gd = Gradient("Data1.csv", 0.000007, "Idx", 5, 1)
 
     gd.train()

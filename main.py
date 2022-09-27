@@ -2,9 +2,9 @@ from lin_regr import *
 from gradient import *
 from lasso_ridge_elastic import *
 
-myProblems = [Question.K_Fold, Question.FeatureScale, Question.Gradient, Question.NormReg]
+#myProblems = [Question.K_Fold, Question.FeatureScale, Question.Gradient, Question.NormReg]
 
-# myProblems = [Question.Gradient]
+myProblems = [Question.LinReg]
 
 for Problem in myProblems:
 
@@ -17,9 +17,8 @@ for Problem in myProblems:
 
         case Question.Gradient:
 
-            gd = Gradient("Data1.csv", 0.000007, "Idx", 1, 5)
+            gd = Gradient("Data1.csv", 0.000007, "Idx", 5, 2)
             gd.train()
-
 
         case Question.FeatureScale:
 

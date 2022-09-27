@@ -216,7 +216,6 @@ class LinRegr:
                     StartTime = t.time()
                     self.regr.fit(self.training_x_fs, self.training_y)
                     EndTime = t.time()
-                    print("Total Time: " + str(EndTime - StartTime))
                     self.predict_y = self.regr.predict(self.testing_x_fs)
                     print("Intercept: \n", self.regr.intercept_)
                     print("\nCoefficients: \n", self.regr.coef_)
