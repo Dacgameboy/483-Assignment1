@@ -9,26 +9,34 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from math import sqrt
-
+from sklearn.preprocessing import StandardScaler
 
 # read data from csv
 df = pd.read_csv('Data1.csv')
 print(df.shape)
 # print(df)
-# print(df.describe())
+print(df.describe(), type(df))
 
+scaler = StandardScaler()
+
+scaled = scaler.fit_transform(df)
+
+print(scaled, type(scaled))
 
 # split target and features
 target_column = ['Idx']
 features = list(set(list(df.columns)) - set(target_column))
+print(features, target_column)
+sdf = pd.DataFrame(scaled, columns=features+target_column)
 
+print(sdf.describe())
 # standardize the values
 df[features] = df[features]/df[features].max()
-# print(df.describe())
+print(df.describe())
 
 
-X = df[features].values
-y = df[target_column].values
+X = sdf[features].values
+y = sdf[target_column].values
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.30, random_state=60)
