@@ -383,16 +383,16 @@ class Gradient:
 
         print()
 
-        self.inc_order()
+        #self.inc_order()
 
         #gradient = [None] * len(w)
         for i in range(1, self.goal_order):
             
             print("Training Order " + str(i))
 
-            #if self.order < i:
+            if self.order < i:
                     
-            #    self.inc_order()
+                self.inc_order()
 
             StartTime = t.time()
             
@@ -430,7 +430,7 @@ class Gradient:
 
             print("Training RMSE (Library): " + str(mse(self.training_y_numpy, self.predict_y, squared=False)))
 
-            print("X vals: " + str(self.training_x_numpy))
+            #print("X vals: " + str(self.training_x_numpy))
 
             print("Training_y_numpy: " + str(self.training_y_numpy[0]))
 
@@ -454,6 +454,6 @@ class Gradient:
 
 if __name__ == "__main__":
 
-    gd = Gradient("Data1.csv", 1, "Idx", 100, 2)
+    gd = Gradient("Data1.csv", 1, "Idx", 5, 2)
 
     gd.train()
