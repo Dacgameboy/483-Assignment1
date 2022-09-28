@@ -94,6 +94,9 @@ class Gradient:
     # order - The order to increase to
     def inc_order(self):
 
+        # Reset w
+        self.create_w()
+
         train_len = len(self.training_x_numpy)
         test_len = len(self.testing_x_numpy)
 
@@ -132,8 +135,8 @@ class Gradient:
 
             #testing_x.insert(0, name, testing_col_data, True)
 
-            #self.w = np.append(self.w, [1])
-            self.w.append(randint(-100, 100))
+            self.w = np.append(self.w, [1])
+            #self.w.append(randint(-100, 100))
             #self.w.append(randint())
 
 
@@ -142,11 +145,11 @@ class Gradient:
     # y - A list containing the expected output value
     # alpha - The learning rate
     # num_examples - The number of rows in x
-    def train_data(self, x, y):
+    def train_data(self):
 
         N = len(self.w)
 
-        num_examples = len(x)
+        num_examples = len(self.training_x_numpy)
 
         # This is the new gradient / old gradient summed
         #g_change = 0
@@ -158,7 +161,7 @@ class Gradient:
         #self.v = np.array([])
 
         #v = np.array([])
-        v = []
+        #v = []
         
         for j in range(N):
 
@@ -176,7 +179,7 @@ class Gradient:
 
                 #    x_val = x[i, j - 1]
 
-                x_val = x[i][j]
+                x_val = self.training_x_numpy[i][j]
 
                 #print("Adding (" + a + " - " + b + ") * " + c + " to the sum...")
 
@@ -184,10 +187,10 @@ class Gradient:
 
                 #print("Dotting " + str(self.w) + " and " + str(x[i]))
 
-                self.predict_val = np.dot(self.w, x[i])
+                self.predict_val = np.dot(self.w, self.training_x_numpy[i])
 
                 # Gradient
-                sum += (self.predict_val - y[i][0]) * x_val
+                sum += (self.predict_val - self.training_y_numpy[i][0]) * x_val
                 
             #print("Gradient for index " + str(j) + ": " + str(sum))
 
@@ -219,12 +222,12 @@ class Gradient:
             sum = sum * (self.alpha / num_examples)
 
             #v = np.append(v, [self.w[j] - sum])
-            v.append(self.w[j] - sum)
+            #v.append(self.w[j] - sum)
 
 
             #v = np.append(self.v, [self.w[j] - sum])
 
-            #w[j] -= sum
+            self.w[j] -= sum
 
         # Check if we're overshooting on average
         #if g_change > 0:
@@ -245,7 +248,7 @@ class Gradient:
 
         #return v #, alpha
 
-        self.w = v
+        #self.w = v
                 
 
     def read_file(self, filename):
@@ -257,9 +260,9 @@ class Gradient:
         
     def create_w(self):
 
-        self.w = [55.61910549, 3.72604117, -1.19312689, -0.09456504, -6.00524466]
+        #self.w = [55.61910549, 3.72604117, -1.19312689, -0.09456504, -6.00524466]
 
-        #self.w = []
+        self.w = [0.01] * (len(self.orig_col_names) + 1)
 
         #for _ in range(len(self.orig_col_names) + 1):
 
@@ -270,6 +273,10 @@ class Gradient:
         
         
     def sample_sets(self):
+
+        for x_col in self.orig_col_names:
+
+            self.df[x_col] = (self.df[x_col] - self.df[x_col].mean()) / self.df[x_col].std()
 
         # Take first sample (training)
         df_new = self.df.sample(frac = 0.75, replace=True)
@@ -376,14 +383,16 @@ class Gradient:
 
         print()
 
+        self.inc_order()
+
         #gradient = [None] * len(w)
         for i in range(1, self.goal_order):
             
             print("Training Order " + str(i))
 
-            if self.order < i:
+            #if self.order < i:
                     
-                self.inc_order()
+            #    self.inc_order()
 
             StartTime = t.time()
             
@@ -393,7 +402,7 @@ class Gradient:
                 #training_x_numpy = training_x.to_numpy()    
                 #training_y_numpy = training_y.to_numpy()
 
-                self.train_data(self.training_x_numpy, self.training_y_numpy)
+                self.train_data()
 
                 #self.predict_y = self.get_predict_y(self.training_x_numpy)
 
@@ -445,6 +454,6 @@ class Gradient:
 
 if __name__ == "__main__":
 
-    gd = Gradient("Data1.csv", 0.000007, "Idx", 5, 1)
+    gd = Gradient("Data1.csv", 1, "Idx", 100, 2)
 
     gd.train()
