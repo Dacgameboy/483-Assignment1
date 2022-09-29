@@ -288,7 +288,7 @@ plt.show()
 if __name__ == "__main__":
     
     # Initialize the object
-    linRegr = LinRegr("Data1.csv", 10)
+    linRegr = LinRegr("Data1.csv", 20)
     #gradient_descent = gd("Data1.csv")
 
     myProblems = [Question.FeatureScale]

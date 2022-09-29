@@ -4,7 +4,7 @@ from lasso_ridge_elastic import *
 
 #myProblems = [Question.K_Fold, Question.FeatureScale, Question.Gradient, Question.NormReg]
 
-myProblems = [Question.LinReg]
+myProblems = [Question.NormReg]
 
 for Problem in myProblems:
 
@@ -22,12 +22,12 @@ for Problem in myProblems:
 
         case Question.FeatureScale:
 
-            linRegr = LinRegr("Data1.csv", 5)
+            linRegr = LinRegr("Data1.csv", 18)
             linRegr.train(Problem)
 
         case Question.NormReg:
 
-            lre = LassoRidgeElastic("Data1.csv", 2)
+            lre = LassoRidgeElastic("Data1.csv", 18)
             lre.train(Problem)
             
         case Question.K_Fold:

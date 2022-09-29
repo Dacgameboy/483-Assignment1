@@ -285,7 +285,7 @@ class Gradient:
         #     self.df[x_col] = (self.df[x_col] - self.df[x_col].mean()) / self.df[x_col].std()
 
         # Take first sample (training)
-        df_new = self.df.sample(frac = 0.75, replace=True)
+        df_new = self.df.sample(frac = 0.02, replace=True)
 
         # Remove classifier
         self.training_x_numpy = df_new.loc[:, self.df.columns != self.classifier]
@@ -427,13 +427,13 @@ class Gradient:
 
                 #self.predict_y = self.get_predict_y(self.training_x_numpy)
 
-                print("\n\n")
+                #print("\n\n")
 
-                print("w: " + str(self.w))
+                #print("w: " + str(self.w))
 
-                print("Training RMSE: " + str(self.RMSE(self.training_x_numpy, self.training_y_numpy)))
+                #print("Training RMSE: " + str(self.RMSE(self.training_x_numpy, self.training_y_numpy)))
 
-                print("Training Coefficients of Determination: " + str(self.R_Sq(self.training_x_numpy, self.training_y_numpy)))
+                #print("Training Coefficients of Determination: " + str(self.R_Sq(self.training_x_numpy, self.training_y_numpy)))
 
                 #print("Training RMSE (Library): " + str(mse(self.training_y_numpy, self.predict_y, squared=False)))
 
@@ -448,6 +448,8 @@ class Gradient:
                 #print("Gradient: " + str(self.gradient))
 
             self.predict_y = self.get_predict_y(self.training_x_numpy)
+
+            print("w: " + str(self.w))
 
             print("Training RMSE (Library): " + str(mse(self.training_y_numpy, self.predict_y, squared=False)))
 
@@ -475,6 +477,6 @@ class Gradient:
 
 if __name__ == "__main__":
 
-    gd = Gradient("Data1.csv", 1, "Idx", 20, 2)
+    gd = Gradient("Data1.csv", 1, "Idx", 100, 12)
 
     gd.train()
