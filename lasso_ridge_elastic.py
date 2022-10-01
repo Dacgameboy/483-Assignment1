@@ -18,6 +18,8 @@ from math import sqrt
 #     Regular = "df"
 #     K_Fold = "kf"
 
+scaler = StandardScaler()
+
 class LassoRidgeElastic:
     
     def __init__(self, filename, goal_order = 2, fold_number = 10):
@@ -264,7 +266,7 @@ class LassoRidgeElastic:
                     print("Order: " + str(i))
 
                     print("\nRidge:")
-                    rr = Ridge(alpha=0.3)
+                    rr = Ridge(alpha=1)
                     #rr = make_pipeline(('scl', StandardScaler(with_mean=False)), Ridge())
                     StartTime = t.time()
                     rr.fit(self.X_train, self.y_train)
@@ -283,7 +285,7 @@ class LassoRidgeElastic:
                     print("Order: " + str(i))
 
                     print("\nLasso: ")
-                    model_lasso = Lasso(alpha=0.3)
+                    model_lasso = Lasso(alpha=1)
                     StartTime = t.time()
                     model_lasso.fit(self.X_train, self.y_train)
                     EndTime = t.time()
@@ -302,7 +304,7 @@ class LassoRidgeElastic:
 
                     # Elastic Net
                     print("\nElastic Net: ")
-                    model_enet = ElasticNet(alpha=0.3)
+                    model_enet = ElasticNet(alpha=1)
                     StartTime = t.time()
                     model_enet.fit(self.X_train, self.y_train)
                     EndTime = t.time()
@@ -323,10 +325,10 @@ class LassoRidgeElastic:
 if __name__ == "__main__":
 
     # Initialize the object
-    lre = LassoRidgeElastic("Data1.csv", 2, 4)
+    lre = LassoRidgeElastic("Data1.csv", 6, 4)
     #gradient_descent = gd("Data1.csv")
 
-    myProblems = [Question.K_Fold]
+    myProblems = [Question.NormReg]
 
     for Problem in myProblems:
 
