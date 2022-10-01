@@ -94,13 +94,13 @@ class Gradient:
     # order - The order to increase to
     def inc_order(self):
 
+        self.order += 1
+
         # Reset w
         self.create_w()
 
         train_len = len(self.training_x_numpy)
         test_len = len(self.testing_x_numpy)
-
-        self.order += 1
 
         for i in range(len(self.orig_col_names)):
 
@@ -111,11 +111,17 @@ class Gradient:
             for example in range(train_len):
 
                 #new_col_data.append(df[col_name][example] ** order)
-                training_col_data.append(self.training_x_numpy[example][i + 1] ** self.order)
+                training_col_data.append(self.training_old.iat[example, i + 1] ** self.order)
 
             for example in range(test_len):
             
-                testing_col_data.append(self.testing_x_numpy[example][i + 1] ** self.order)
+                testing_col_data.append(self.testing_old.iat[example, i + 1] ** self.order)
+
+            training_col_data = np.array(training_col_data)
+            testing_col_data = np.array(testing_col_data)
+
+            training_col_data = (training_col_data - training_col_data.mean()) / training_col_data.std()
+            testing_col_data = (testing_col_data - testing_col_data.mean()) / testing_col_data.std()
 
             # Create the name for the column
             #name = str(i) + " Order: " + str(self.order)
@@ -135,7 +141,7 @@ class Gradient:
 
             #testing_x.insert(0, name, testing_col_data, True)
 
-            self.w = np.append(self.w, [1])
+            #self.w = np.append(self.w, [1])
             #self.w.append(randint(-100, 100))
             #self.w.append(randint())
 
@@ -262,7 +268,7 @@ class Gradient:
 
         #self.w = [55.61910549, 3.72604117, -1.19312689, -0.09456504, -6.00524466]
 
-        self.w = [0.01] * (len(self.orig_col_names) + 1)
+        self.w = [0.01] * (len(self.orig_col_names) * self.order + 1)
 
         #for _ in range(len(self.orig_col_names) + 1):
 
@@ -274,12 +280,12 @@ class Gradient:
         
     def sample_sets(self):
 
-        for x_col in self.orig_col_names:
+        # for x_col in self.orig_col_names:
 
-            self.df[x_col] = (self.df[x_col] - self.df[x_col].mean()) / self.df[x_col].std()
+        #     self.df[x_col] = (self.df[x_col] - self.df[x_col].mean()) / self.df[x_col].std()
 
         # Take first sample (training)
-        df_new = self.df.sample(frac = 0.75, replace=True)
+        df_new = self.df.sample(frac = 0.02, replace=True)
 
         # Remove classifier
         self.training_x_numpy = df_new.loc[:, self.df.columns != self.classifier]
@@ -303,11 +309,26 @@ class Gradient:
         self.training_y_numpy.reset_index(drop=True, inplace=True)
         self.testing_y_numpy.reset_index(drop=True, inplace=True)
 
+
+        self.training_old = self.training_x_numpy.copy()
+        self.testing_old = self.testing_x_numpy.copy()
+
+        for x_col in self.orig_col_names:
+
+            self.training_x_numpy[x_col] = (self.training_x_numpy[x_col] - self.training_x_numpy[x_col].mean()) / self.training_x_numpy[x_col].std()
+            self.testing_x_numpy[x_col] = (self.testing_x_numpy[x_col] - self.testing_x_numpy[x_col].mean()) / self.testing_x_numpy[x_col].std()
+
+
         self.training_x_numpy = self.training_x_numpy.to_numpy()    
         self.testing_x_numpy = self.testing_x_numpy.to_numpy()
 
         self.training_y_numpy = self.training_y_numpy.to_numpy()    
         self.testing_y_numpy = self.testing_y_numpy.to_numpy()
+
+
+        # Store the old dataset
+        # self.training_old = self.training_x_numpy.copy()
+        # self.testing_old = self.training_x_numpy.copy()
 
         #print("Mean 1: " + str(self.training_x_numpy[:, 1].mean()))
         #print("Mean 2: " + str(self.training_x_numpy[:, 2].mean()))
@@ -406,13 +427,13 @@ class Gradient:
 
                 #self.predict_y = self.get_predict_y(self.training_x_numpy)
 
-                print("\n\n")
+                #print("\n\n")
 
-                print("w: " + str(self.w))
+                #print("w: " + str(self.w))
 
-                print("Training RMSE: " + str(self.RMSE(self.training_x_numpy, self.training_y_numpy)))
+                #print("Training RMSE: " + str(self.RMSE(self.training_x_numpy, self.training_y_numpy)))
 
-                print("Training Coefficients of Determination: " + str(self.R_Sq(self.training_x_numpy, self.training_y_numpy)))
+                #print("Training Coefficients of Determination: " + str(self.R_Sq(self.training_x_numpy, self.training_y_numpy)))
 
                 #print("Training RMSE (Library): " + str(mse(self.training_y_numpy, self.predict_y, squared=False)))
 
@@ -427,6 +448,8 @@ class Gradient:
                 #print("Gradient: " + str(self.gradient))
 
             self.predict_y = self.get_predict_y(self.training_x_numpy)
+
+            print("w: " + str(self.w))
 
             print("Training RMSE (Library): " + str(mse(self.training_y_numpy, self.predict_y, squared=False)))
 
@@ -454,6 +477,6 @@ class Gradient:
 
 if __name__ == "__main__":
 
-    gd = Gradient("Data1.csv", 1, "Idx", 5, 2)
+    gd = Gradient("Data1.csv", 1, "Idx", 100, 12)
 
     gd.train()
